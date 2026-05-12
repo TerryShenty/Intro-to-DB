@@ -11,8 +11,7 @@
 | `app.py` | Python 后端服务，提供网页接口和数据库操作逻辑 |
 | `frontend.html` | 简易前端页面 |
 | `cli_app.py` | 最小命令行菜单版，便于讲解代码逻辑 |
-| `实验五报告.md` | 实验报告 Markdown 版本 |
-| `lab5_er_first_layout_text_only_final.png` | ER 图 |
+| `lab5_ER.png` | ER 图 |
 
 ## 数据库对象说明
 
@@ -198,44 +197,3 @@ DESCRIBE notifications;
 - 评论通知：评论后，系统自动通知朋友圈作者和可见范围内相关用户。
 - 管理员审核：管理员可以查看所有朋友圈、屏蔽或恢复朋友圈、注销用户。
 - 视图检查：前端“验收视图”页面可以直接查看各个数据库视图的结果。
-
-## GitHub 使用说明
-
-可以把本项目上传到 GitHub，但 GitHub Pages 不能直接运行完整系统。原因是本系统依赖 Python 后端和 MySQL 数据库，GitHub Pages 只能托管静态网页。
-
-助教或其他同学如果要运行完整系统，需要把仓库拉到本地，然后按上面的步骤初始化 MySQL 数据库并运行 `python3 app.py`。
-
-如果使用命令行上传到 GitHub，可以先在 GitHub 网站上新建一个空仓库，例如 `lab5-social-platform`，然后在本地执行：
-
-```bash
-cd /path/to/lab5
-git init
-git add schema.sql init_data.sql app.py frontend.html cli_app.py README.md 实验五报告.md lab5_er_first_layout_text_only_final.png .gitignore
-git commit -m "Add lab5 social platform project"
-git branch -M main
-git remote add origin https://github.com/你的用户名/lab5-social-platform.git
-git push -u origin main
-```
-
-如果使用 GitHub 网页上传，也只需要上传下面列出的项目文件，不要上传缓存文件。
-
-建议上传的文件：
-
-```text
-schema.sql
-init_data.sql
-app.py
-frontend.html
-cli_app.py
-README.md
-实验五报告.md
-lab5_er_first_layout_text_only_final.png
-```
-
-不要上传：
-
-```text
-.DS_Store
-__pycache__/
-*.pyc
-```
