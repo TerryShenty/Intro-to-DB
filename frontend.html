@@ -1,0 +1,1377 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lab5 简易朋友圈系统</title>
+  <style>
+    :root {
+      --bg: #eef2f6;
+      --surface: #ffffff;
+      --surface-2: #f7f9fc;
+      --text: #172033;
+      --muted: #667085;
+      --line: #d8dee9;
+      --primary: #1f7a5c;
+      --primary-2: #e8f5ef;
+      --danger: #b4232f;
+      --danger-2: #fff1f3;
+      --warn: #946200;
+      --shadow: 0 18px 42px rgba(25, 37, 54, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 14px;
+    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 9px 10px;
+      color: var(--text);
+      background: #fff;
+    }
+    textarea { min-height: 76px; resize: vertical; line-height: 1.6; }
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .login-page {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+    }
+    .login-shell {
+      width: min(1040px, 100%);
+      display: grid;
+      grid-template-columns: 0.85fr 1.15fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+    .intro, .card, .panel, .moment, .list-item {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    .intro {
+      padding: 32px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 460px;
+    }
+    .intro h1 {
+      margin: 0;
+      font-size: 30px;
+      letter-spacing: 0;
+    }
+    .intro p { color: var(--muted); line-height: 1.8; }
+    .demo-accounts {
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+    .login-grid {
+      display: grid;
+      gap: 14px;
+    }
+    .card { padding: 18px; }
+    .card h2, .panel h2 {
+      margin: 0 0 14px;
+      font-size: 17px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+    .form-grid .wide { grid-column: 1 / -1; }
+    .btn {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 9px 12px;
+      background: #fff;
+      color: var(--text);
+    }
+    .btn:hover { border-color: #a8b2c1; }
+    .btn.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+    .btn.danger {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: #fff;
+    }
+    .btn.ghost {
+      background: transparent;
+      color: inherit;
+    }
+    .btn.small {
+      padding: 6px 9px;
+      font-size: 12px;
+    }
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 244px minmax(0, 1fr);
+    }
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 18px;
+      color: #e8edf5;
+      background: #172033;
+    }
+    .brand {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+    .profile-mini {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+      margin-bottom: 14px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+    }
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #dce3ec;
+      flex: 0 0 auto;
+    }
+    .avatar.small {
+      width: 32px;
+      height: 32px;
+    }
+    .nav {
+      display: grid;
+      gap: 6px;
+    }
+    .nav button {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      text-align: left;
+      border: 0;
+      border-radius: 6px;
+      padding: 10px 11px;
+      background: transparent;
+      color: #cbd5e1;
+    }
+    .nav button.active,
+    .nav button:hover {
+      background: #263249;
+      color: #fff;
+    }
+    .unread-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: var(--danger);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .main {
+      width: min(1040px, 100%);
+      padding: 24px;
+    }
+    .page-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .page-head h1 {
+      margin: 0;
+      font-size: 23px;
+      letter-spacing: 0;
+    }
+    .page-head p {
+      margin: 5px 0 0;
+      color: var(--muted);
+    }
+    .stack {
+      display: grid;
+      gap: 14px;
+    }
+    .panel { padding: 16px; }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: end;
+    }
+    .row > * { min-width: 150px; }
+    .feed {
+      display: grid;
+      gap: 14px;
+    }
+    .moment {
+      display: grid;
+      grid-template-columns: 54px minmax(0, 1fr);
+      gap: 12px;
+      padding: 16px;
+    }
+    .moment-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+    .moment-author { font-weight: 700; }
+    .muted {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .moment-content {
+      white-space: pre-wrap;
+      line-height: 1.7;
+      margin: 0 0 10px;
+    }
+    .moment-image {
+      width: min(420px, 100%);
+      max-height: 280px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      display: block;
+      margin: 8px 0 10px;
+      background: #e4e9f0;
+    }
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 8px 0;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      padding: 2px 8px;
+      color: var(--muted);
+      background: var(--surface-2);
+      font-size: 12px;
+    }
+    .badge.green {
+      color: var(--primary);
+      border-color: #bfe3d4;
+      background: var(--primary-2);
+    }
+    .badge.red {
+      color: var(--danger);
+      border-color: #f1b8bf;
+      background: var(--danger-2);
+    }
+    .comments {
+      margin-top: 10px;
+      padding: 10px;
+      background: var(--surface-2);
+      border-radius: 8px;
+      display: grid;
+      gap: 8px;
+    }
+    .comment {
+      display: grid;
+      grid-template-columns: 32px minmax(0, 1fr);
+      gap: 8px;
+      align-items: start;
+    }
+    .comment-text {
+      line-height: 1.5;
+    }
+    .comment-box {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .comment-box input { min-width: 0; }
+    .moment-actions {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .choice-panel {
+      grid-column: 1 / -1;
+      display: grid;
+      gap: 10px;
+    }
+    .choice-list {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: var(--surface-2);
+    }
+    .choice-list h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+    }
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 8px;
+    }
+    .choice-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      background: #fff;
+    }
+    .choice-item input {
+      width: auto;
+      flex: 0 0 auto;
+    }
+    .people-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 12px;
+    }
+    .person-card, .request-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 13px;
+    }
+    .person-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .empty {
+      padding: 28px;
+      border: 1px dashed #c2cad7;
+      border-radius: 8px;
+      color: var(--muted);
+      text-align: center;
+      background: rgba(255, 255, 255, 0.62);
+    }
+    .message {
+      position: fixed;
+      right: 18px;
+      top: 18px;
+      z-index: 20;
+      max-width: min(420px, calc(100vw - 36px));
+      border-radius: 8px;
+      padding: 11px 13px;
+      box-shadow: 0 12px 28px rgba(25, 37, 54, 0.16);
+      display: none;
+    }
+    .message.show { display: block; }
+    .message.ok {
+      background: #edf8f2;
+      color: #0b6b4b;
+      border: 1px solid #bfe3d4;
+    }
+    .message.error {
+      background: var(--danger-2);
+      color: var(--danger);
+      border: 1px solid #f1b8bf;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: var(--surface-2);
+      color: #344054;
+    }
+    tr:last-child td { border-bottom: 0; }
+    .view-table th.col-content,
+    .view-table td.col-content {
+      min-width: 260px;
+      max-width: 360px;
+      line-height: 1.6;
+      white-space: normal;
+    }
+    .view-table th.col-image,
+    .view-table td.col-image {
+      min-width: 132px;
+    }
+    .view-table th.col-avatar,
+    .view-table td.col-avatar {
+      min-width: 72px;
+    }
+    .table-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      background: #dce3ec;
+    }
+    .table-image {
+      width: 112px;
+      height: 78px;
+      border-radius: 8px;
+      object-fit: cover;
+      display: block;
+      background: #e4e9f0;
+      border: 1px solid var(--line);
+    }
+    @media (max-width: 860px) {
+      .login-shell, .app-shell { grid-template-columns: 1fr; }
+      .intro { min-height: auto; }
+      .sidebar {
+        position: static;
+        height: auto;
+      }
+      .main { padding: 16px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .moment { grid-template-columns: 44px minmax(0, 1fr); }
+      .page-head { display: block; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="message" class="message"></div>
+
+  <script>
+    const state = {
+      mode: "guest",
+      userId: "",
+      adminId: "",
+      profile: null,
+      userPage: "feed",
+      adminPage: "review",
+      unreadCount: 0,
+      notificationTimer: null
+    };
+
+    const userPages = {
+      feed: ["朋友圈", "查看当前用户可见的好友朋友圈，并直接评论。"],
+      own: ["我的朋友圈", "发表、修改、删除自己的朋友圈。"],
+      friends: ["好友", "搜索用户、申请好友、管理好友分组。"],
+      requests: ["好友申请", "处理收到的申请，查看发出的申请。"],
+      notifications: ["通知", "好友申请、评论和管理员审核通知。"],
+      profile: ["个人资料", "修改昵称、性别、生日、展示年龄、头像和朋友圈可见时长。"],
+      views: ["验收视图", "查看数据库视图结果，便于说明设计。"]
+    };
+
+    const adminPages = {
+      review: ["朋友圈审核", "管理员可查看所有朋友圈，但不展示用户个人基本信息。"],
+      deleteUser: ["注销用户", "注销某用户并级联删除相关信息。"],
+      adminProfile: ["管理员资料", "修改管理员基本信息。"],
+      views: ["验收视图", "查看管理员审核视图。"]
+    };
+
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"']/g, ch => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[ch]));
+    }
+
+    async function api(path, options = {}) {
+      const res = await fetch(path, {
+        headers: { "Content-Type": "application/json" },
+        ...options
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || res.statusText);
+      return data;
+    }
+
+    async function postJSON(path, payload) {
+      return api(path, { method: "POST", body: JSON.stringify(payload) });
+    }
+
+    function showMessage(text, type = "ok") {
+      const box = document.getElementById("message");
+      box.className = `message ${type} show`;
+      box.textContent = text;
+      clearTimeout(showMessage.timer);
+      showMessage.timer = setTimeout(() => box.className = "message", 3200);
+    }
+
+    function app(html) {
+      document.getElementById("app").innerHTML = html;
+    }
+
+    function isUnread(notification) {
+      return String(notification?.is_read) === "0";
+    }
+
+    function setUnreadCount(count) {
+      state.unreadCount = count;
+      const badge = document.getElementById("notificationBadge");
+      if (badge) {
+        badge.textContent = count > 99 ? "99+" : String(count);
+        badge.hidden = count === 0;
+      }
+    }
+
+    async function refreshUnreadCount() {
+      if (state.mode !== "user" || !state.userId) return;
+      try {
+        const data = await api(`/api/notifications?user=${encodeURIComponent(state.userId)}`);
+        setUnreadCount((data.rows || []).filter(isUnread).length);
+      } catch (err) {
+        console.warn(err);
+      }
+    }
+
+    function startNotificationPolling() {
+      stopNotificationPolling();
+      refreshUnreadCount();
+      state.notificationTimer = setInterval(refreshUnreadCount, 5000);
+    }
+
+    function stopNotificationPolling() {
+      if (state.notificationTimer) clearInterval(state.notificationTimer);
+      state.notificationTimer = null;
+      state.unreadCount = 0;
+    }
+
+    function table(rows) {
+      if (!rows || rows.length === 0) return `<div class="empty">暂无数据</div>`;
+      const keys = Object.keys(rows[0]);
+      const headerLabel = key => ({
+        avatar_url: "avatar",
+        author_avatar_url: "avatar",
+        image_url: "image"
+      }[key] || key);
+      const columnClass = key => {
+        if (key === "content" || key === "message") return "col-content";
+        if (key === "image_url") return "col-image";
+        if (key === "avatar_url" || key === "author_avatar_url") return "col-avatar";
+        return "";
+      };
+      const cell = (key, value) => {
+        const cls = columnClass(key);
+        if (value && (key === "image_url" || key === "avatar_url" || key === "author_avatar_url")) {
+          const className = key === "image_url" ? "table-image" : "table-avatar";
+          return `<td class="${cls}"><img class="${className}" src="${esc(value)}" alt="" title="${esc(value)}"></td>`;
+        }
+        return `<td class="${cls}">${esc(value)}</td>`;
+      };
+      return `<table class="view-table"><thead><tr>${keys.map(k => `<th class="${columnClass(k)}">${esc(headerLabel(k))}</th>`).join("")}</tr></thead><tbody>${
+        rows.map(row => `<tr>${keys.map(k => cell(k, row[k])).join("")}</tr>`).join("")
+      }</tbody></table>`;
+    }
+
+    function renderLogin() {
+      stopNotificationPolling();
+      state.mode = "guest";
+      app(`
+        <main class="login-page">
+          <div class="login-shell">
+            <section class="intro">
+              <div>
+                <h1>Lab5 简易朋友圈系统</h1>
+                <p>这个页面只负责登录和注册。进入后会按普通用户端、管理员端分开，功能页面也会分开显示。</p>
+              </div>
+              <div class="demo-accounts">
+                <strong>演示账号</strong><br>
+                普通用户：Alice093427 / Bob104582 / Carol386915，密码均为 123456<br>
+                管理员：9001 / admin123
+              </div>
+            </section>
+            <section class="login-grid">
+              <div class="card">
+                <h2>用户登录</h2>
+                <div class="form-grid">
+                  <div><label>user_id</label><input id="loginUserId" value="Alice093427"></div>
+                  <div><label>密码</label><input id="loginPassword" type="password" value="123456"></div>
+                  <button class="btn primary wide" onclick="loginUser()">进入用户端</button>
+                </div>
+              </div>
+              <div class="card">
+                <h2>用户注册</h2>
+                <div class="form-grid">
+                  <div><label>user_id</label><input id="regUserId" placeholder="英文开头，只含字母数字下划线"></div>
+                  <div><label>初始密码</label><input id="regPassword" type="password"></div>
+                  <div class="wide"><label>昵称</label><input id="regName" placeholder="可以和账号不同"></div>
+                  <button class="btn primary wide" onclick="registerUser()">注册并进入用户端</button>
+                </div>
+              </div>
+              <div class="card">
+                <h2>管理员登录</h2>
+                <div class="form-grid">
+                  <div><label>管理员 ID</label><input id="adminLoginId" value="9001"></div>
+                  <div><label>密码</label><input id="adminLoginPassword" type="password" value="admin123"></div>
+                  <button class="btn primary wide" onclick="loginAdmin()">进入管理员端</button>
+                </div>
+              </div>
+            </section>
+          </div>
+        </main>
+      `);
+    }
+
+    async function loginUser() {
+      const user_id = document.getElementById("loginUserId").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      await postJSON("/api/login", { user_id, password });
+      state.mode = "user";
+      state.userId = user_id;
+      state.userPage = "feed";
+      await loadProfile();
+      showMessage("登录成功");
+      renderUserShell();
+      startNotificationPolling();
+    }
+
+    async function registerUser() {
+      const user_id = document.getElementById("regUserId").value.trim();
+      const password = document.getElementById("regPassword").value;
+      const name = document.getElementById("regName").value.trim() || user_id;
+      await postJSON("/api/register", { user_id, password, name });
+      state.mode = "user";
+      state.userId = user_id;
+      state.userPage = "profile";
+      await loadProfile();
+      showMessage("注册成功");
+      renderUserShell();
+      startNotificationPolling();
+    }
+
+    async function loginAdmin() {
+      const admin_id = document.getElementById("adminLoginId").value.trim();
+      const password = document.getElementById("adminLoginPassword").value;
+      await postJSON("/api/admin/login", { admin_id, password });
+      state.mode = "admin";
+      state.adminId = admin_id;
+      state.adminPage = "review";
+      stopNotificationPolling();
+      showMessage("管理员登录成功");
+      renderAdminShell();
+    }
+
+    async function loadProfile() {
+      const data = await api(`/api/profile?user=${encodeURIComponent(state.userId)}`);
+      state.profile = data.row;
+    }
+
+    function renderUserShell() {
+      const [title, subtitle] = userPages[state.userPage];
+      const profile = state.profile || {};
+      app(`
+        <div class="app-shell">
+          <aside class="sidebar">
+            <div class="brand">朋友圈</div>
+            <div class="profile-mini">
+              <img class="avatar" src="${esc(profile.avatar_url)}" alt="">
+              <div><strong>${esc(profile.name || state.userId)}</strong><div class="muted">${esc(state.userId)}</div></div>
+            </div>
+            <nav class="nav">
+              ${Object.entries(userPages).map(([key, item]) => `
+                <button class="${state.userPage === key ? "active" : ""}" onclick="goUser('${key}')">
+                  <span>${esc(item[0])}</span>
+                  ${key === "notifications" ? `<span id="notificationBadge" class="unread-badge" ${state.unreadCount ? "" : "hidden"}>${state.unreadCount > 99 ? "99+" : esc(state.unreadCount)}</span>` : ""}
+                </button>
+              `).join("")}
+              <button onclick="renderLogin()">退出登录</button>
+            </nav>
+          </aside>
+          <main class="main">
+            <header class="page-head">
+              <div><h1>${esc(title)}</h1><p>${esc(subtitle)}</p></div>
+            </header>
+            <section id="page"></section>
+          </main>
+        </div>
+      `);
+      renderUserPage();
+      refreshUnreadCount();
+    }
+
+    async function goUser(page) {
+      state.userPage = page;
+      if (page === "profile") await loadProfile();
+      renderUserShell();
+    }
+
+    async function renderUserPage() {
+      try {
+        if (state.userPage === "feed") return renderMoments("friend");
+        if (state.userPage === "own") return renderOwnMoments();
+        if (state.userPage === "friends") return renderFriends();
+        if (state.userPage === "requests") return renderRequests();
+        if (state.userPage === "notifications") return renderNotifications();
+        if (state.userPage === "profile") return renderProfile();
+        if (state.userPage === "views") return renderUserViews();
+      } catch (err) {
+        document.getElementById("page").innerHTML = `<div class="empty">${esc(err.message)}</div>`;
+      }
+    }
+
+    async function loadPosts(scope) {
+      const data = await api(`/api/posts?user=${encodeURIComponent(state.userId)}&scope=${encodeURIComponent(scope)}`);
+      const rows = data.rows || [];
+      const ids = rows.map(p => p.post_id).filter(Boolean);
+      const comments = ids.length ? await api(`/api/comments?post_ids=${encodeURIComponent(ids.join(","))}`) : { rows: [] };
+      const byPost = {};
+      comments.rows.forEach(c => {
+        (byPost[c.post_id] ||= []).push(c);
+      });
+      rows.forEach(p => p.comments = byPost[p.post_id] || []);
+      return rows;
+    }
+
+    async function renderMoments(scope) {
+      const posts = await loadPosts(scope);
+      document.getElementById("page").innerHTML = `
+        <div class="feed">
+          ${posts.length ? posts.map(p => momentCard(p, { scope })).join("") : `<div class="empty">这里还没有可见朋友圈</div>`}
+        </div>
+      `;
+    }
+
+    async function renderOwnMoments() {
+      const [posts, groups, friends] = await Promise.all([
+        loadPosts("own"),
+        api(`/api/groups?user=${encodeURIComponent(state.userId)}`),
+        api(`/api/friends?user=${encodeURIComponent(state.userId)}`)
+      ]);
+      document.getElementById("page").innerHTML = `
+        <div class="stack">
+          <section class="panel">
+            <h2>发表朋友圈</h2>
+            <div class="form-grid">
+              <div class="wide"><label>内容，最多 500 字</label><textarea id="newPostContent" placeholder="写点什么"></textarea></div>
+              <div class="wide"><label>图片 URL，可为空</label><input id="newPostImage" placeholder="只支持一张图片"></div>
+              <div class="wide"><label>可见范围</label><select id="newPostVisibility" onchange="updateVisibilityChoices()">
+                <option value="friends">全部好友可见</option>
+                <option value="groups">指定分组可见</option>
+                <option value="selected">指定好友可见</option>
+                <option value="self">仅自己可见</option>
+              </select></div>
+              <div id="visibilityChoices" class="choice-panel">
+                <div id="groupChoicePanel" class="choice-list" hidden>
+                  <h3>选择可见分组</h3>
+                  <div class="choice-grid">
+                    ${groups.rows.length ? groups.rows.map(g => `
+                      <label class="choice-item">
+                        <input type="checkbox" name="newPostGroups" value="${esc(g.group_id)}">
+                        <span><strong>${esc(g.group_name)}</strong><div class="muted">group_id ${esc(g.group_id)}</div></span>
+                      </label>
+                    `).join("") : `<div class="muted">你还没有好友分组，可以先到“好友”页面创建。</div>`}
+                  </div>
+                </div>
+                <div id="friendChoicePanel" class="choice-list" hidden>
+                  <h3>选择可见好友</h3>
+                  <div class="choice-grid">
+                    ${friends.rows.length ? friends.rows.map(f => `
+                      <label class="choice-item">
+                        <input type="checkbox" name="newPostUsers" value="${esc(f.friend_id)}">
+                        <img class="avatar small" src="${esc(f.avatar_url)}" alt="">
+                        <span><strong>${esc(f.name)}</strong><div class="muted">${esc(f.friend_id)}</div></span>
+                      </label>
+                    `).join("") : `<div class="muted">你还没有好友，暂时不能指定好友可见。</div>`}
+                  </div>
+                </div>
+              </div>
+              <button class="btn primary wide" onclick="createPost()">发表</button>
+            </div>
+          </section>
+          <section class="feed">
+            ${posts.length ? posts.map(p => momentCard(p, { scope: "own" })).join("") : `<div class="empty">你还没有发表朋友圈</div>`}
+          </section>
+        </div>
+      `;
+      updateVisibilityChoices();
+    }
+
+    function updateVisibilityChoices() {
+      const visibility = document.getElementById("newPostVisibility")?.value;
+      const groupPanel = document.getElementById("groupChoicePanel");
+      const friendPanel = document.getElementById("friendChoicePanel");
+      if (groupPanel) groupPanel.hidden = visibility !== "groups";
+      if (friendPanel) friendPanel.hidden = visibility !== "selected";
+    }
+
+    function getAuthor(post) {
+      if (post.author_name) {
+        return {
+          id: post.author_id,
+          name: post.author_name,
+          avatar: post.author_avatar_url
+        };
+      }
+      if (post.owner_id === state.userId || post.user_id === state.userId) {
+        return {
+          id: state.userId,
+          name: state.profile?.name || state.userId,
+          avatar: state.profile?.avatar_url || ""
+        };
+      }
+      return {
+        id: post.user_id || post.target_user_id || "",
+        name: post.name || post.user_id || post.target_user_id || "",
+        avatar: post.avatar_url || ""
+      };
+    }
+
+    function momentCard(post, options = {}) {
+      const author = getAuthor(post);
+      const blocked = post.post_status === "blocked";
+      const canComment = state.mode === "user" && !["admin", "preview"].includes(options.scope) && !blocked;
+      const own = options.scope === "own";
+      return `
+        <article class="moment">
+          <img class="avatar" src="${esc(author.avatar)}" alt="">
+          <div>
+            <div class="moment-head">
+              <span><span class="moment-author">${esc(author.name || author.id)}</span><div class="muted">${esc(author.id || "")}</div></span>
+              <span class="muted">${esc(post.created_at || "")}</span>
+            </div>
+            <p class="moment-content">${esc(post.content)}</p>
+            ${post.image_url ? `<img class="moment-image" src="${esc(post.image_url)}" alt="">` : ""}
+            <div class="badges">
+              <span class="badge ${blocked ? "red" : "green"}">${esc(post.post_status || "visible")}</span>
+              <span class="badge">${esc(post.visibility || "friends")}</span>
+              <span class="badge">更新时间 ${esc(post.updated_at || "")}</span>
+            </div>
+            ${renderComments(post)}
+            ${canComment ? `
+              <div class="comment-box">
+                <input id="comment-${esc(post.post_id)}" placeholder="评论这条朋友圈">
+                <button class="btn small primary" onclick="addComment(${esc(post.post_id)}, '${esc(options.scope || "friend")}')">评论</button>
+              </div>
+            ` : ""}
+            ${own ? `
+              <div class="moment-actions">
+                <textarea id="edit-${esc(post.post_id)}">${esc(post.content)}</textarea>
+                <div class="row">
+                  <button class="btn small" onclick="updatePost(${esc(post.post_id)})">保存修改</button>
+                  <button class="btn small danger" onclick="deletePost(${esc(post.post_id)})">删除朋友圈</button>
+                </div>
+              </div>
+            ` : ""}
+          </div>
+        </article>
+      `;
+    }
+
+    function renderComments(post) {
+      const comments = post.comments || [];
+      return `
+        <div class="comments">
+          ${comments.length ? comments.map(c => `
+            <div class="comment">
+              <img class="avatar small" src="${esc(c.avatar_url)}" alt="">
+              <div class="comment-text">
+                <strong>${esc(c.user_name || c.user_id)}</strong>：${esc(c.content)}
+                <div class="muted">${esc(c.created_at)}</div>
+              </div>
+            </div>
+          `).join("") : `<div class="muted">暂无评论</div>`}
+        </div>
+      `;
+    }
+
+    async function addComment(postId, scope) {
+      const input = document.getElementById(`comment-${postId}`);
+      const content = input.value.trim();
+      if (!content) return showMessage("评论不能为空", "error");
+      await postJSON("/api/comments", { post_id: postId, user_id: state.userId, content });
+      showMessage("评论已发布，通知会自动生成");
+      if (scope === "own") return renderOwnMoments();
+      return renderMoments(scope || "friend");
+    }
+
+    async function createPost() {
+      const visibility = document.getElementById("newPostVisibility").value;
+      const groupIds = Array.from(document.querySelectorAll("input[name='newPostGroups']:checked")).map(input => input.value);
+      const viewerIds = Array.from(document.querySelectorAll("input[name='newPostUsers']:checked")).map(input => input.value);
+      if (visibility === "groups" && groupIds.length === 0) return showMessage("请选择至少一个可见分组", "error");
+      if (visibility === "selected" && viewerIds.length === 0) return showMessage("请选择至少一个可见好友", "error");
+      await postJSON("/api/posts/create", {
+        user_id: state.userId,
+        content: document.getElementById("newPostContent").value.trim(),
+        image_url: document.getElementById("newPostImage").value.trim(),
+        visibility,
+        group_ids: groupIds.join(","),
+        viewer_ids: viewerIds.join(",")
+      });
+      showMessage("朋友圈已发表");
+      renderOwnMoments();
+    }
+
+    async function updatePost(postId) {
+      await postJSON("/api/posts/update", {
+        user_id: state.userId,
+        post_id: postId,
+        content: document.getElementById(`edit-${postId}`).value.trim()
+      });
+      showMessage("朋友圈已修改，更新时间由触发器自动更新");
+      renderOwnMoments();
+    }
+
+    async function deletePost(postId) {
+      if (!confirm("确定删除这条朋友圈吗？相关评论会自动删除。")) return;
+      await postJSON("/api/posts/delete", { user_id: state.userId, post_id: postId });
+      showMessage("朋友圈已删除");
+      renderOwnMoments();
+    }
+
+    async function renderFriends() {
+      const friends = await api(`/api/friends?user=${encodeURIComponent(state.userId)}`);
+      const groups = await api(`/api/groups?user=${encodeURIComponent(state.userId)}`);
+      const groupOptions = groups.rows.map(g => `<option value="${esc(g.group_id)}">${esc(g.group_name)}</option>`).join("");
+      document.getElementById("page").innerHTML = `
+        <div class="stack">
+          <section class="panel">
+            <h2>搜索并添加好友</h2>
+            <div class="row">
+              <div><label>账号或昵称</label><input id="friendSearch" placeholder="例如 terry jack 或 Jack468305"></div>
+              <button class="btn primary" onclick="searchUsers()">搜索</button>
+            </div>
+            <div id="searchResults" style="margin-top:12px"></div>
+            <div id="previewResults" style="margin-top:12px"></div>
+          </section>
+          <section class="panel">
+            <h2>我的好友分组</h2>
+            <div class="row">
+              <div><label>新分组名</label><input id="newGroupName" placeholder="例如 Classmates"></div>
+              <button class="btn primary" onclick="createGroup()">创建分组</button>
+            </div>
+            <div class="badges">${groups.rows.map(g => `<span class="badge">${esc(g.group_id)}：${esc(g.group_name)}</span>`).join("") || `<span class="muted">暂无分组</span>`}</div>
+          </section>
+          <section>
+            <div class="people-grid">
+              ${friends.rows.length ? friends.rows.map(f => `
+                <div class="person-card">
+                  <div class="person-head">
+                    <img class="avatar" src="${esc(f.avatar_url)}" alt="">
+                    <div><strong>${esc(f.name)}</strong><div class="muted">${esc(f.friend_id)}</div></div>
+                  </div>
+                  <div class="badges">
+                    <span class="badge">${esc(f.gender)}</span>
+                    <span class="badge">展示年龄 ${esc(f.display_age)}</span>
+                    <span class="badge green">${esc(f.group_names)}</span>
+                  </div>
+                  <div class="row">
+                    <select id="group-${esc(f.friend_id)}">${groupOptions}</select>
+                    <button class="btn small" onclick="addFriendToGroup('${esc(f.friend_id)}')">加入</button>
+                    <button class="btn small" onclick="removeFriendFromGroup('${esc(f.friend_id)}')">移出</button>
+                    <button class="btn small danger" onclick="deleteFriend('${esc(f.friend_id)}')">删除好友</button>
+                  </div>
+                </div>
+              `).join("") : `<div class="empty">还没有好友，可以先搜索并发送申请</div>`}
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    async function searchUsers() {
+      const keyword = document.getElementById("friendSearch").value.trim();
+      const data = await api(`/api/users?search=${encodeURIComponent(keyword)}`);
+      const rows = data.rows.filter(u => u.user_id !== state.userId);
+      document.getElementById("searchResults").innerHTML = rows.length ? `
+        <div class="people-grid">
+          ${rows.map(u => `
+            <div class="person-card">
+              <div class="person-head">
+                <img class="avatar" src="${esc(u.avatar_url)}" alt="">
+                <div><strong>${esc(u.name)}</strong><div class="muted">${esc(u.user_id)}</div></div>
+              </div>
+              <div class="badges">
+                <span class="badge">${esc(u.gender)}</span>
+                <span class="badge">展示年龄 ${esc(u.display_age)}</span>
+                <span class="badge">朋友圈 ${esc(u.post_visible_period)}</span>
+              </div>
+              <div class="row">
+                <button class="btn small primary" onclick="sendRequestTo('${esc(u.user_id)}')">申请添加</button>
+                <button class="btn small" onclick="previewUser('${esc(u.user_id)}')">预览朋友圈</button>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      ` : `<div class="empty">没有找到用户</div>`;
+    }
+
+    async function previewUser(target_user_id) {
+      const data = await api(`/api/post-preview?target=${encodeURIComponent(target_user_id)}`);
+      const rows = data.rows || [];
+      const ids = rows.map(p => p.post_id).filter(Boolean);
+      const comments = ids.length ? await api(`/api/comments?post_ids=${encodeURIComponent(ids.join(","))}`) : { rows: [] };
+      const byPost = {};
+      comments.rows.forEach(c => (byPost[c.post_id] ||= []).push(c));
+      rows.forEach(p => p.comments = byPost[p.post_id] || []);
+      document.getElementById("previewResults").innerHTML = `
+        <section class="panel">
+          <h2>${esc(target_user_id)} 的朋友圈预览</h2>
+          <p class="muted">这里调用 post_preview_view，只显示最近 3 个月、普通好友可见、未被管理员屏蔽的朋友圈。</p>
+          <div class="feed" style="margin-top:12px">
+            ${rows.length ? rows.map(p => momentCard(p, { scope: "preview" })).join("") : `<div class="empty">这个用户暂时没有可预览的朋友圈</div>`}
+          </div>
+        </section>
+      `;
+      document.getElementById("previewResults").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    async function sendRequestTo(receiver_id) {
+      await postJSON("/api/requests", { requester_id: state.userId, receiver_id });
+      showMessage("好友申请已发送，对方会收到通知");
+    }
+
+    async function createGroup() {
+      const group_name = document.getElementById("newGroupName").value.trim();
+      if (!group_name) return showMessage("分组名不能为空", "error");
+      await postJSON("/api/groups", { owner_id: state.userId, group_name });
+      showMessage("分组已创建");
+      renderFriends();
+    }
+
+    async function addFriendToGroup(friend_id) {
+      const group_id = document.getElementById(`group-${friend_id}`).value;
+      if (!group_id) return showMessage("请先创建分组", "error");
+      await postJSON("/api/groups/membership", { owner_id: state.userId, friend_id, group_id, action: "add" });
+      showMessage("好友已加入分组");
+      renderFriends();
+    }
+
+    async function removeFriendFromGroup(friend_id) {
+      const group_id = document.getElementById(`group-${friend_id}`).value;
+      if (!group_id) return showMessage("请先选择分组", "error");
+      await postJSON("/api/groups/membership", { owner_id: state.userId, friend_id, group_id, action: "remove" });
+      showMessage("好友已从分组移出");
+      renderFriends();
+    }
+
+    async function deleteFriend(friend_id) {
+      if (!confirm(`确定删除好友 ${friend_id} 吗？双方好友关系都会删除。`)) return;
+      await postJSON("/api/friends/delete", { user_id: state.userId, friend_id });
+      showMessage("好友已删除");
+      renderFriends();
+    }
+
+    async function renderRequests() {
+      const data = await api(`/api/requests?user=${encodeURIComponent(state.userId)}`);
+      document.getElementById("page").innerHTML = `
+        <div class="stack">
+          <section class="panel">
+            <h2>发起申请</h2>
+            <div class="row">
+            <div><label>对方 user_id</label><input id="receiverId" placeholder="例如 Jack468305"></div>
+              <button class="btn primary" onclick="sendRequestManual()">发送申请</button>
+            </div>
+          </section>
+          <section class="panel">
+            <h2>收到的待处理申请</h2>
+            <div class="stack">
+              ${data.received.filter(r => r.request_status === "pending").map(r => `
+                <div class="request-card">
+                  <strong>${esc(r.requester_id)}</strong> 申请添加你为好友
+                  <div class="muted">${esc(r.created_at)}</div>
+                  <div class="row" style="margin-top:10px">
+                    <button class="btn small primary" onclick="respondRequest(${esc(r.request_id)}, 'accept')">接受</button>
+                    <button class="btn small danger" onclick="respondRequest(${esc(r.request_id)}, 'reject')">拒绝</button>
+                  </div>
+                </div>
+              `).join("") || `<div class="empty">暂无待处理申请</div>`}
+            </div>
+          </section>
+          <section class="panel"><h2>收到的申请记录</h2>${table(data.received)}</section>
+          <section class="panel"><h2>发出的申请记录</h2>${table(data.sent)}</section>
+        </div>
+      `;
+    }
+
+    async function sendRequestManual() {
+      const receiver_id = document.getElementById("receiverId").value.trim();
+      if (!receiver_id) return showMessage("请输入对方 user_id", "error");
+      await sendRequestTo(receiver_id);
+      renderRequests();
+    }
+
+    async function respondRequest(request_id, action) {
+      await postJSON("/api/requests/respond", { request_id, user_id: state.userId, action });
+      showMessage(action === "accept" ? "已接受申请，双方成为好友" : "已拒绝申请");
+      renderRequests();
+    }
+
+    async function renderNotifications() {
+      const data = await api(`/api/notifications?user=${encodeURIComponent(state.userId)}`);
+      setUnreadCount((data.rows || []).filter(isUnread).length);
+      document.getElementById("page").innerHTML = `
+        <div class="stack">
+          ${data.rows.length ? data.rows.map(n => `
+            <div class="list-item">
+              <div class="badges">
+                <span class="badge ${isUnread(n) ? "" : "green"}">${isUnread(n) ? "未读" : "已读"}</span>
+                <span class="badge">${esc(n.notification_type)}</span>
+                ${n.request_status ? `<span class="badge">${esc(n.request_status)}</span>` : ""}
+              </div>
+              <p>${esc(n.message)}</p>
+              <div class="muted">${esc(n.created_at)}</div>
+              ${isUnread(n) ? `<button class="btn small" onclick="markRead(${esc(n.notification_id)})">标记已读</button>` : ""}
+            </div>
+          `).join("") : `<div class="empty">暂无通知</div>`}
+        </div>
+      `;
+    }
+
+    async function markRead(notification_id) {
+      await postJSON("/api/notifications/read", { notification_id });
+      await renderNotifications();
+    }
+
+    function renderProfile() {
+      const p = state.profile || {};
+      document.getElementById("page").innerHTML = `
+        <section class="panel">
+          <h2>我的资料</h2>
+          <div class="form-grid">
+            <div><label>昵称</label><input id="profileName" value="${esc(p.name || "")}"></div>
+            <div><label>性别</label><select id="profileGender">
+              <option value="男">男</option><option value="女">女</option><option value="其他">其他</option>
+            </select></div>
+            <div><label>出生日期</label><input id="profileBirth" type="date" value="${esc(p.birth_date || "")}"></div>
+            <div><label>展示年龄</label><input id="profileAge" type="number" value="${esc(p.display_age || "")}"></div>
+            <div class="wide"><label>头像 URL</label><input id="profileAvatar" value="${esc(p.avatar_url || "")}"></div>
+            <div><label>朋友圈可见时长</label><select id="profilePeriod">
+              <option value="7_days">7 天</option>
+              <option value="3_months">3 个月</option>
+              <option value="6_months">6 个月</option>
+              <option value="forever">永久</option>
+            </select></div>
+            <button class="btn primary" onclick="updateProfile()">保存资料</button>
+          </div>
+        </section>
+      `;
+      document.getElementById("profileGender").value = p.gender || "其他";
+      document.getElementById("profilePeriod").value = p.post_visible_period || "3_months";
+    }
+
+    async function updateProfile() {
+      await postJSON("/api/users/update", {
+        user_id: state.userId,
+        name: document.getElementById("profileName").value.trim(),
+        gender: document.getElementById("profileGender").value,
+        birth_date: document.getElementById("profileBirth").value,
+        display_age: document.getElementById("profileAge").value,
+        avatar_url: document.getElementById("profileAvatar").value.trim(),
+        post_visible_period: document.getElementById("profilePeriod").value
+      });
+      await loadProfile();
+      showMessage("个人信息已更新");
+      renderUserShell();
+    }
+
+    async function renderUserViews(viewName = "friend_post_view") {
+      const options = ["friend_profile_view", "friend_post_view", "own_post_view", "post_preview_view", "user_notification_view"];
+      const data = await api(`/api/raw?view=${encodeURIComponent(viewName)}&user=${encodeURIComponent(state.userId)}`);
+      document.getElementById("page").innerHTML = `
+        <section class="panel">
+          <h2>视图检查</h2>
+          <div class="row">
+            <select id="viewName" onchange="renderUserViews(this.value)">
+              ${options.map(v => `<option ${v === viewName ? "selected" : ""}>${v}</option>`).join("")}
+            </select>
+          </div>
+          <div style="margin-top:12px">${table(data.rows)}</div>
+        </section>
+      `;
+    }
+
+    function renderAdminShell() {
+      const [title, subtitle] = adminPages[state.adminPage];
+      app(`
+        <div class="app-shell">
+          <aside class="sidebar">
+            <div class="brand">管理员端</div>
+            <div class="profile-mini">
+              <div><strong>Admin ${esc(state.adminId)}</strong><div class="muted">审核与维护</div></div>
+            </div>
+            <nav class="nav">
+              ${Object.entries(adminPages).map(([key, item]) => `
+                <button class="${state.adminPage === key ? "active" : ""}" onclick="goAdmin('${key}')">${esc(item[0])}</button>
+              `).join("")}
+              <button onclick="renderLogin()">退出登录</button>
+            </nav>
+          </aside>
+          <main class="main">
+            <header class="page-head">
+              <div><h1>${esc(title)}</h1><p>${esc(subtitle)}</p></div>
+            </header>
+            <section id="page"></section>
+          </main>
+        </div>
+      `);
+      renderAdminPage();
+    }
+
+    function goAdmin(page) {
+      state.adminPage = page;
+      renderAdminShell();
+    }
+
+    async function renderAdminPage() {
+      try {
+        if (state.adminPage === "review") return renderAdminReview();
+        if (state.adminPage === "deleteUser") return renderAdminDeleteUser();
+        if (state.adminPage === "adminProfile") return renderAdminProfile();
+        if (state.adminPage === "views") return renderAdminViews();
+      } catch (err) {
+        document.getElementById("page").innerHTML = `<div class="empty">${esc(err.message)}</div>`;
+      }
+    }
+
+    async function renderAdminReview() {
+      const data = await api("/api/admin/posts");
+      const ids = data.rows.map(p => p.post_id).join(",");
+      const comments = ids ? await api(`/api/comments?post_ids=${encodeURIComponent(ids)}`) : { rows: [] };
+      const byPost = {};
+      comments.rows.forEach(c => (byPost[c.post_id] ||= []).push(c));
+      data.rows.forEach(p => p.comments = byPost[p.post_id] || []);
+      document.getElementById("page").innerHTML = `
+        <div class="feed">
+          ${data.rows.map(p => `
+            <article class="moment">
+              <img class="avatar" src="${esc(p.author_avatar_url)}" alt="">
+              <div>
+                <div class="moment-head">
+                  <span>
+                    <span class="moment-author">${esc(p.author_name || p.user_id)}</span>
+                    <div class="muted">${esc(p.user_id)} · Post #${esc(p.post_id)}</div>
+                  </span>
+                  <span class="muted">${esc(p.created_at)}</span>
+                </div>
+                <p class="moment-content">${esc(p.content)}</p>
+                ${p.image_url ? `<img class="moment-image" src="${esc(p.image_url)}" alt="">` : ""}
+                <div class="badges">
+                  <span class="badge ${p.post_status === "blocked" ? "red" : "green"}">${esc(p.post_status)}</span>
+                  <span class="badge">${esc(p.visibility)}</span>
+                  <span class="badge">更新时间 ${esc(p.updated_at)}</span>
+                  <span class="badge">评论 ${esc(p.comment_count)}</span>
+                </div>
+                ${renderComments(p)}
+                <div class="row">
+                  <button class="btn small danger" onclick="blockPost(${esc(p.post_id)})">审核删除/屏蔽</button>
+                  <button class="btn small primary" onclick="unblockPost(${esc(p.post_id)})">恢复可见</button>
+                </div>
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    async function blockPost(post_id) {
+      await postJSON("/api/admin/block_post", { admin_id: state.adminId, post_id });
+      showMessage("朋友圈已屏蔽，并已通知作者");
+      renderAdminReview();
+    }
+
+    async function unblockPost(post_id) {
+      await postJSON("/api/admin/unblock_post", { admin_id: state.adminId, post_id });
+      showMessage("朋友圈已恢复可见，并已通知作者");
+      renderAdminReview();
+    }
+
+    function renderAdminDeleteUser() {
+      document.getElementById("page").innerHTML = `
+        <section class="panel">
+          <h2>注销用户</h2>
+          <div class="row">
+            <div><label>要注销的 user_id</label><input id="deleteUserId" placeholder="例如 David582731"></div>
+            <button class="btn danger" onclick="deleteUserByAdmin()">注销用户</button>
+          </div>
+        </section>
+      `;
+    }
+
+    async function deleteUserByAdmin() {
+      const target_user_id = document.getElementById("deleteUserId").value.trim();
+      if (!target_user_id) return showMessage("请输入 user_id", "error");
+      if (!confirm(`确定注销用户 ${target_user_id} 吗？这会删除系统中所有相关信息。`)) return;
+      await postJSON("/api/admin/delete_user", { admin_id: state.adminId, target_user_id });
+      showMessage("用户已注销，相关数据已级联删除");
+      renderAdminDeleteUser();
+    }
+
+    function renderAdminProfile() {
+      document.getElementById("page").innerHTML = `
+        <section class="panel">
+          <h2>管理员资料</h2>
+          <div class="row">
+            <div><label>管理员 ID</label><input id="adminEditId" value="${esc(state.adminId)}"></div>
+            <div><label>新昵称</label><input id="adminName" placeholder="例如 Admin Terry"></div>
+            <button class="btn primary" onclick="updateAdmin()">保存</button>
+          </div>
+        </section>
+      `;
+    }
+
+    async function updateAdmin() {
+      const admin_id = document.getElementById("adminEditId").value.trim();
+      const name = document.getElementById("adminName").value.trim();
+      await postJSON("/api/admin/update", { admin_id, name });
+      state.adminId = admin_id;
+      showMessage("管理员资料已更新");
+      renderAdminShell();
+    }
+
+    async function renderAdminViews() {
+      const data = await api("/api/raw?view=admin_post_view");
+      document.getElementById("page").innerHTML = `
+        <section class="panel">
+          <h2>admin_post_view</h2>
+          <p class="muted">这个视图只展示朋友圈审核需要的信息，不展示用户姓名、性别、生日等个人基本信息。</p>
+          ${table(data.rows)}
+        </section>
+      `;
+    }
+
+    renderLogin();
+    window.addEventListener("unhandledrejection", event => {
+      showMessage(event.reason?.message || String(event.reason), "error");
+    });
+  </script>
+</body>
+</html>
